@@ -64,7 +64,7 @@ fit_do_upgrade() {
 
 fit_check_image() {
 	local magic="$(get_magic_long "$1")"
-	[ "$magic" != "d00dfeed" ] && {
+	[ "$magic" != "d00dfeed" -a "$magic" != "daadfeed" ] && {
 		echo "Invalid image type."
 		return 74
 	}

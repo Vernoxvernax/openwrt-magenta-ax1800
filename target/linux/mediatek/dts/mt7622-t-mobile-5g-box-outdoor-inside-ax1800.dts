@@ -1,0 +1,361 @@
+/dts-v1/;
+
+#include "mt7622.dtsi"
+#include "mt6380.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+/ {
+	model = "T-Mobile 5G Outdoor Inside AX1800";
+	compatible = "t-mobile,5g,box,outdoor,inside,ax1800", "mediatek,mt7622";
+
+	aliases {
+		serial0 = &uart0;
+		label-mac-device = &gmac0;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n1";
+	};
+
+	cpus {
+		cpu@0 {
+			proc-supply = <&mt6380_vcpu_reg>;
+			sram-supply = <&mt6380_vm_reg>;
+		};
+
+		cpu@1 {
+			proc-supply = <&mt6380_vcpu_reg>;
+			sram-supply = <&mt6380_vm_reg>;
+		};
+	};
+
+	memory {
+		reg = <0x00 0x40000000 0x00 0x3F000000>;
+	};
+};
+
+&eth {
+	status = "okay";
+
+	gmac0: mac@0 { /* LAN */
+		compatible = "mediatek,eth-mac";
+		reg = <0>;
+		phy-mode = "rgmii";
+		fixed-link {
+			speed = <1000>;
+			full-duplex;
+			pause;
+		};
+	};
+
+	gmac1: mac@1 { /* WAN */
+		compatible = "mediatek,eth-mac";
+		reg = <1>;
+		phy-mode = "sgmii";
+		fixed-link {
+			speed = <2500>;
+			full-duplex;
+			pause;
+		};
+	};
+
+	mdio: mdio-bus {
+		#address-cells = <1>;
+	  #size-cells = <0>;
+
+		switch@1f {
+			compatible = "mediatek,mt7531";
+			reg = <31>;
+			reset-gpios = <&pio 54 0>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupt-parent = <&pio>;
+			interrupts = <53 4>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					label = "lan1";
+				};
+
+				port@1 {
+					reg = <1>;
+					label = "lan2";
+				};
+
+				port@2 {
+					reg = <2>;
+					label = "lan3";
+				};
+
+				port@3 {
+					reg = <3>;
+					label = "lan4";
+				};
+
+				wan: port@4 {
+					reg = <4>;
+					label = "wan";
+				};
+
+				port@5 { /* LAN */
+					reg = <5>;
+					ethernet = <&gmac0>;
+					phy-mode = "rgmii";
+
+					fixed-link {
+						speed = <1000>;
+						full-duplex;
+						pause;
+					};
+				};
+
+				port@6 { /* WAN */
+					reg = <6>;
+					ethernet = <&gmac1>;
+					phy-mode = "sgmii";
+
+					fixed-link {
+						speed = <2500>;
+						full-duplex;
+						pause;
+					};
+				};
+			};
+		};
+  };
+};
+
+&bch {
+	status = "okay";
+};
+
+&pio {
+	pcie0_pins: pcie0-pins {
+		mux {
+			function = "pcie";
+			groups = "pcie0_pad_perst",
+				 "pcie0_1_waken",
+				 "pcie0_1_clkreq";
+		};
+	};
+
+	pcie1_pins: pcie1-pins {
+		mux {
+			function = "pcie";
+			groups = "pcie1_pad_perst",
+				 "pcie1_0_waken",
+				 "pcie1_0_clkreq";
+		};
+	};
+
+	serial_nand_pins: serial-nand-pins {
+		mux {
+			function = "flash";
+			groups = "snfi";
+		};
+	};
+
+	pmic_bus_pins: pmic-bus-pins {
+		mux {
+			function = "pmic";
+			groups = "pmic_bus";
+		};
+	};
+
+	uart0_pins: uart0-pins {
+		mux {
+			function = "uart";
+			groups = "uart0_0_tx_rx";
+		};
+	};
+
+	watchdog_pins: watchdog-pins {
+		mux {
+			function = "watchdog";
+			groups = "watchdog";
+		};
+	};
+
+	epa_elna_pins: epa-elna-pins {
+		mux {
+			function = "antsel";
+			groups = "antsel0", "antsel1", "antsel2", "antsel3",
+				"antsel4", "antsel5", "antsel6", "antsel7",
+				"antsel8", "antsel9", "antsel12", "antsel13",
+				"antsel14", "antsel15", "antsel16", "antsel17";
+		};
+	};
+
+	/* No motivation to test these :/
+	reset {
+		label = "reset";
+		gpios = <0x1f 0x60 0x01>;
+		linux,code = <0x198>;
+		debounce-interval = <0x3c>;
+	};
+
+	wps {
+		label = "wps";
+		gpios = <0x1f 0x66 0x01>;
+		linux,code = <0x211>;
+		debounce-interval = <0x3c>;
+	};
+	*/
+};
+
+&i2c0 {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+};
+
+&i2c2 {
+	status = "okay";
+};
+
+&pwrap {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pmic_bus_pins>;
+	status = "okay";
+};
+
+&snfi {
+	pinctrl-names = "default";
+	pinctrl-0 = <&serial_nand_pins>;
+	status = "okay";
+
+	snand: flash@0 {
+		compatible = "spi-nand";
+		mediatek,bmt-v2;
+		mediatek,bmt-table-size = <0x1000>;
+		nand-ecc-engine = <&snfi>;
+		reg = <0>;
+		spi-tx-bus-width = <4>;
+		spi-rx-bus-width = <4>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "Preloader";
+				reg = <0x00000 0x0080000>;
+				read-only;
+			};
+
+			partition@80000 {
+				label = "ATF";
+				reg = <0x80000 0x0040000>;
+			};
+
+			partition@c0000 {
+				label = "Bootloader";
+				reg = <0xc0000 0x0080000>;
+			};
+
+			partition@140000 {
+				label = "Config";
+				reg = <0x140000 0x0080000>;
+			};
+
+			factory: partition@1c0000 {
+				label = "Factory";
+				reg = <0x1c0000 0x0100000>;
+
+				nvmem-layout {
+					compatible = "fixed-layout";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					macaddr_eeprom_0: macaddr@0 {
+						reg = <0x4 0x6>;
+					};
+
+					macaddr_eeprom_1: macaddr@1 {
+						reg = <0xa 0x6>;
+					};
+				};
+			};
+
+			partition@300000 {
+				label = "Devinfo";
+				reg = <0x300000 0x0020000>;
+			};
+
+			partition@320000 {
+				label = "senv";
+				reg = <0x320000 0x0020000>;
+			};
+
+			partition@360000 {
+				label = "bootseq";
+				reg = <0x360000 0x0020000>;
+			};
+
+			partition@500000 {
+				label = "firmware1";
+				compatible = "denx,fit";
+				openwrt,cmdline-match = "mtdparts=master";
+				reg = <0x500000 0x1e00000>;
+			};
+
+			partition@2300000 {
+				label = "firmware2";
+				compatible = "denx,fit";
+				openwrt,cmdline-match = "mtdparts=slave";
+				reg = <0x2300000 0x1e00000>;
+			};
+
+			partition@4100000 {
+				label = "data";
+				reg = <0x4100000 0x1900000>;
+			};
+
+			partition@5a00000 {
+				label = "mfg";
+				reg = <0x5a00000 0x1400000>;
+			};
+		};
+	};
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_pins>;
+	status = "okay";
+};
+
+&watchdog {
+	pinctrl-names = "default";
+	pinctrl-0 = <&watchdog_pins>;
+	status = "okay";
+};
+
+&wmac {
+	mediatek,mtd-eeprom = <&factory 0x0>;
+	nvmem-cells = <&macaddr_eeprom_0>;
+	nvmem-cell-names = "mac-address";
+	status = "okay";
+};
+
+&pcie0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie0_pins>;
+	status = "okay";
+};
+
+&slot0 {
+	mt7615@0,0 {
+		compatible = "mediatek,mt76";
+		reg = <0x0000 0 0 0 0>;
+		mediatek,mtd-eeprom = <&factory 0x0>;
+	};
+};

@@ -1,6 +1,7 @@
 DTS_DIR := $(DTS_DIR)/mediatek
 
 DEVICE_VARS += BUFFALO_TRX_MAGIC
+MAGIC_NUMBER = 0xd00dfeed
 
 define Image/Prepare
 	# For UBI we want only one extra block
@@ -478,3 +479,22 @@ endif
   DEVICE_COMPAT_MESSAGE := Flash layout changes require a manual reinstall using factory.bin.
 endef
 TARGET_DEVICES += xiaomi_redmi-router-ax6s
+
+define Device/t-mobile_5g_box_outdoor_inside_ax1800
+  DEVICE_TITLE := MTK7622 ax1800 mt7531 AP
+  DEVICE_VENDOR := Magenta
+  DEVICE_MODEL := AX1800
+  DEVICE_DTS := mt7622-t-mobile-5g-box-outdoor-inside-ax1800
+  DEVICE_DTS_DIR := ../dts
+  DEVICE_PACKAGES := kmod-mt7915e kmod-mt7915-firmware
+  PAGESIZE := 2048
+  BLOCKSIZE := 128k
+  KERNEL_SIZE := 9088k
+  KERNEL := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
+  SUPPORTED_DEVICES += mt7622-2gmac
+  IMAGE/sysupgrade.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | append-metadata
+  MAGIC_NUMBER = 0xdaadfeed
+  UBINIZE_OPTS := -E 5
+endef
+TARGET_DEVICES += t-mobile_5g_box_outdoor_inside_ax1800
+

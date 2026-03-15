@@ -1,0 +1,55 @@
+--- a/arch/arm/boot/compressed/head.S
++++ b/arch/arm/boot/compressed/head.S
+@@ -12,7 +12,7 @@
+ #include "efi-header.S"
+ 
+ #ifdef __ARMEB__
+-#define OF_DT_MAGIC 0xd00dfeed
++#define OF_DT_MAGIC 0xdaadfeed
+ #else
+ #define OF_DT_MAGIC 0xedfe0dd0
+ #endif
+--- a/arch/arm/kernel/head-common.S
++++ b/arch/arm/kernel/head-common.S
+@@ -13,7 +13,7 @@
+ #define ATAG_CORE_SIZE_EMPTY ((2*4) >> 2)
+ 
+ #ifdef CONFIG_CPU_BIG_ENDIAN
+-#define OF_DT_MAGIC 0xd00dfeed
++#define OF_DT_MAGIC 0xdaadfeed
+ #else
+ #define OF_DT_MAGIC 0xedfe0dd0 /* 0xd00dfeed in big-endian */
+ #endif
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -14,7 +14,7 @@
+ #include <linux/errno.h>
+ 
+ /* Definitions used by the flattened device tree */
+-#define OF_DT_HEADER		0xd00dfeed	/* marker */
++#define OF_DT_HEADER		0xdaadfeed	/* marker */
+ 
+ #ifndef __ASSEMBLY__
+ 
+--- a/scripts/dtc/dtx_diff
++++ b/scripts/dtc/dtx_diff
+@@ -98,7 +98,7 @@ compile_to_dts() {
+ 	elif [ -f "${dtx}" ] && [ -r "${dtx}" ] ; then
+ 
+ 		magic=`hexdump -n 4 -e '/1 "%02x"' ${dtx}`
+-		if [ "${magic}" = "d00dfeed" ] ; then
++		if [ "${magic}" = "daadfeed" ] ; then
+ 
+ 			# -----  input is FDT (binary blob)
+ 
+--- a/scripts/dtc/libfdt/fdt.h
++++ b/scripts/dtc/libfdt/fdt.h
+@@ -47,7 +47,7 @@ struct fdt_property {
+ 
+ #endif /* !__ASSEMBLY */
+ 
+-#define FDT_MAGIC	0xd00dfeed	/* 4: version, 4: total size */
++#define FDT_MAGIC	0xdaadfeed	/* 4: version, 4: total size */
+ #define FDT_TAGSIZE	sizeof(fdt32_t)
+ 
+ #define FDT_BEGIN_NODE	0x1		/* Start node: full name */

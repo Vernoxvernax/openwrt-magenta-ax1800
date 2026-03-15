@@ -1,107 +1,56 @@
 ![OpenWrt logo](include/logo.png)
 
-OpenWrt Project is a Linux operating system targeting embedded devices. Instead
-of trying to create a single, static firmware, OpenWrt provides a fully
-writable filesystem with package management. This frees you from the
-application selection and configuration provided by the vendor and allows you
-to customize the device through the use of packages to suit any application.
-For developers, OpenWrt is the framework to build an application without having
-to build a complete firmware around it; for users this means the ability for
-full customization, to use the device in ways never envisioned.
+# What the?
 
-Sunshine!
+This is a fork to provide rudimentary support for the "T-Mobile/Magenta 5G Box Outdoor Inside - AX1800". Aside from the terrible name it's also running a terribly outdated and heavily worsened version of Lede (OpenWrt 1000 years ago). Usually newly supported devices can be easily integrated into the OpenWrt buildsystem, but unfortunately Magenta (probably) made WNC (manufacturer) change magic numbers among other crimes to (perhaps) avoid situations where people can just flash their own OS on it. (*they like data*, literally insane what information they were (mayhaps) uploading through easycwmp).
 
-## Download
+Either way, it's been like 11 months of work trying to make all the pieces fit to get this working. I have a lot of people to thank in the community, but it should also be mentioned that Magenta themselves were willing to opensource their ancient buildsystem upon my request.
 
-Built firmware images are available for many architectures and come with a
-package selection to be used as WiFi home router. To quickly find a factory
-image usable to migrate from a vendor stock firmware to OpenWrt, try the
-*Firmware Selector*.
+Currently, this project exists only because of my own interest, which is also why only the minimum actually works.
 
-* [OpenWrt Firmware Selector](https://firmware-selector.openwrt.org/)
+Things I haven't bothered with:
 
-If your device is supported, please follow the **Info** link to see install
-instructions or consult the support resources listed below.
+- flashing firmware without tftp in uboot
+- LEDs (only the power is working)
+- more than 20mb of usable space
+- the USB port
+- reading the ethernet mac address (they'll be random, but you can assign them manually, which you should)
 
-## 
+WiFi 6 (+ Wifi MAC addresses), Ethernet (LAN & WAN) are all working as of right now.
 
-An advanced user may require additional or specific package. (Toolchain, SDK, ...) For everything else than simple firmware download, try the wiki download page:
 
-* [OpenWrt Wiki Download](https://openwrt.org/downloads)
+# Setup
 
-## Development
+To install this, get the image build using the openwrt build guide on their wikipage [here](https://openwrt.org/docs/guide-developer/toolchain/use-buildsystem).
 
-To build your own firmware you need a GNU/Linux, BSD or macOS system (case
-sensitive filesystem required). Cygwin is unsupported because of the lack of a
-case sensitive file system.
+Then you have to connect to the UART on the device. ![where my mouse cursor points at](https://i.imgur.com/Iiw7Iek.png)
 
-### Requirements
+From left to right: Pin 2 is TX and Pin 4 is RX.
 
-You need the following tools to compile OpenWrt, the package names vary between
-distributions. A complete list with distribution specific packages is found in
-the [Build System Setup](https://openwrt.org/docs/guide-developer/build-system/install-buildsystem)
-documentation.
+During boot up you'll get a small menu with a 5 second timer.
+Just push the up or down key to cancel the timer.
 
-```
-binutils bzip2 diff find flex gawk gcc-6+ getopt grep install libc-dev libz-dev
-make4.1+ perl python3.7+ rsync subversion unzip which
-```
+Connect your computer to the WAN (yellow) port of the device.
+We'll be using that computer to host the firmware file with tftp.
+Since uboot doesn't have DHCP and because we are also connected to the lan port we have to assign an ip-address to the NIC on the computer. Like 192.168.2.254 - you won't be able to ping the router just yet. Then install a tftp server of your liking and host the firmware file on it.
 
-### Quickstart
+Choose the second option "System Load Linux Kernel then write to Flash via TFTP."
+The script will ask you what the name of the firmware file is and the ip addresses. If all goes well you should see the file being transfered and then flashed to the NAND (oh yea, did I mentioned you can't go back?).
+Then you'll be dropped into the uboot shell from where you can launch OpenWRT using `run boot2`.
+You may need to change the bootargs in uboot to `mtdparts=slave` or `mtdparts=master` depending on where OpenWRT is written to.
 
-1. Run `./scripts/feeds update -a` to obtain all the latest package definitions
-   defined in feeds.conf / feeds.conf.default
+WiFi is be disabled by default so you'll need to connect to one of the black RJ-45s and configure it however you like. Have fun.
 
-2. Run `./scripts/feeds install -a` to install symlinks for all obtained
-   packages into package/feeds/
+Notes: 25.12 is the first version that should theoretically add sysupgrade support. So you should be able to just flash newer versions via LuCI or over SSH. Note that it will always complain about the invalid magic number, which you can always bypass by just forcing the upgrade.
 
-3. Run `make menuconfig` to select your preferred configuration for the
-   toolchain, target system & firmware packages.
+If there are any problems or you want me to get anything additional working just create an issue.
 
-4. Run `make` to build your firmware. This will download all sources, build the
-   cross-compile toolchain and then cross-compile the GNU/Linux kernel & all chosen
-   applications for your target system.
+Stuff:
+https://forum.openwrt.org/t/add-support-for-t-mobile-mtk7622-5g-idu
 
-### Related Repositories
+Thank you evs.
 
-The main repository uses multiple sub-repositories to manage packages of
-different categories. All packages are installed via the OpenWrt package
-manager called `opkg`. If you're looking to develop the web interface or port
-packages to OpenWrt, please find the fitting repository below.
-
-* [LuCI Web Interface](https://github.com/openwrt/luci): Modern and modular
-  interface to control the device via a web browser.
-
-* [OpenWrt Packages](https://github.com/openwrt/packages): Community repository
-  of ported packages.
-
-* [OpenWrt Routing](https://github.com/openwrt/routing): Packages specifically
-  focused on (mesh) routing.
-
-* [OpenWrt Video](https://github.com/openwrt/video): Packages specifically
-  focused on display servers and clients (Xorg and Wayland).
-
-## Support Information
-
-For a list of supported devices see the [OpenWrt Hardware Database](https://openwrt.org/supported_devices)
-
-### Documentation
-
-* [Quick Start Guide](https://openwrt.org/docs/guide-quick-start/start)
-* [User Guide](https://openwrt.org/docs/guide-user/start)
-* [Developer Documentation](https://openwrt.org/docs/guide-developer/start)
-* [Technical Reference](https://openwrt.org/docs/techref/start)
-
-### Support Community
-
-* [Forum](https://forum.openwrt.org): For usage, projects, discussions and hardware advise.
-* [Support Chat](https://webchat.oftc.net/#openwrt): Channel `#openwrt` on **oftc.net**.
-
-### Developer Community
-
-* [Bug Reports](https://bugs.openwrt.org): Report bugs in OpenWrt
-* [Dev Mailing List](https://lists.openwrt.org/mailman/listinfo/openwrt-devel): Send patches
-* [Dev Chat](https://webchat.oftc.net/#openwrt-devel): Channel `#openwrt-devel` on **oftc.net**.
+___
 
 ## License
 
